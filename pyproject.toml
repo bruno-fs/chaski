@@ -20,7 +20,11 @@ black = "^22.10.0"
 ipykernel = "^6.15.1"
 isort = "^5.10.1"
 flakeheaven = "^3.2.0"
+python-semantic-release = "^7.32.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.semantic_release]
+version_toml = "pyproject.toml:tool.poetry.version"
