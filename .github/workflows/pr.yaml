@@ -15,7 +15,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-
+      - name: Install poetry
+        run: pipx install poetry
       - name: Set up Python 3.9
         uses: actions/setup-python@v4.5.0
         with:
@@ -23,9 +24,7 @@ jobs:
           cache: "poetry"
           cache-dependency-path: "poetry.lock"
       - name: Install dependencies
-        run: |
-          pip install -U poetry
-          poetry install
+        run: poetry install
       - name: Lint
         run: |
           poetry run flakeheaven lint
