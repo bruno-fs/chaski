@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     name: "Bump version and create changelog with commitizen"
     steps:
-      - name: Check out
-        uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           token: "${{ secrets.GITHUB_TOKEN }}"
@@ -30,21 +30,40 @@ jobs:
         # Ref https://github.com/commitizen-tools/commitizen/issues/612
         run: |
           git tag -d ${{ steps.cz.outputs.version }}
-          rm changelog-increment.md
+          git add changelog-increment.md
+          git commit --amend
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
-      - name: Release
-        uses: softprops/action-gh-release@v1
         with:
           title: "[auto] Bump Version + Changelog"
           body: Update version and changelog
           branch: bump-version
           base: main
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     body_path: "changelog-increment.md"
-      #     tag_name: ${{ env.REVISION }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    if: "startsWith(github.event.head_commit.message, 'bump:')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+          cache: "poetry"
+          cache-dependency-path: "poetry.lock"
+      - name: Install dependencies
+        run: |
+          pip install -U poetry
+          poetry install --only=commit-lint --no-root
+      - name: Get version
+        run: |
+          echo "VERSION_NUMBER=$(poetry run cz version -p)"
+        id: version
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: "changelog-increment.md"
+          tag_name: ${{ steps.version.outputs.VERSION_NUMBER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
