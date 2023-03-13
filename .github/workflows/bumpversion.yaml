@@ -28,7 +28,9 @@ jobs:
       - name: Cleanup created tag
         # commitzen ALWAYS creates a tag, but we don't want this behavior
         # Ref https://github.com/commitizen-tools/commitizen/issues/612
-        run: git tag -d ${{ steps.cz.outputs.version }}
+        run: |
+          git tag -d ${{ steps.cz.outputs.version }}
+          rm changelog-increment.md
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
       - name: Release
