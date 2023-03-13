@@ -59,12 +59,11 @@ jobs:
           poetry install --only=commit-lint --no-root
       - name: Get version
         run: |
-          echo "VERSION_NUMBER=$(poetry run cz version -p)"
-        id: version
+          echo "VERSION_NUMBER=$(poetry run cz version -p)" >> $GITHUB_ENV
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: "changelog-increment.md"
-          tag_name: ${{ steps.version.outputs.VERSION_NUMBER }}
+          tag_name: ${{ env.VERSION_NUMBER }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
