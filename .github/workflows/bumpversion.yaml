@@ -32,6 +32,7 @@ jobs:
           body: Update version and changelog
           branch: bump-version
           base: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       # - name: Release
       #   uses: softprops/action-gh-release@v1
       #   with:
