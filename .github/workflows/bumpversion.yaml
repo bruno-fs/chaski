@@ -29,6 +29,7 @@ jobs:
         # commitzen ALWAYS creates a tag, but we don't want this behavior
         # Ref https://github.com/commitizen-tools/commitizen/issues/612
         run: |
+          chown -R $(whoami) .git
           git tag -d ${{ steps.cz.outputs.version }}
           git add changelog-increment.md
           git commit --amend
