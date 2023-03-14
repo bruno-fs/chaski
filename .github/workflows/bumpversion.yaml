@@ -41,7 +41,7 @@ jobs:
           poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
           git add changelog-increment.md
-          git commit --amend --reuse-message
+          git commit --amend --no-edit
       # - name: Print Version
       #   run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
       # - name: Cleanup created tag
