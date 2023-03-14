@@ -40,8 +40,8 @@ jobs:
           git config user.email 'bump-version@dont.have.email'
           poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
-          git add changelog-increment.md
-          git commit --amend --no-edit
+          git commit -am "bump: release ${{ env.VERSION_NUMBER}}\n\n$(cat changelog-increment.md)"
+          rm changelog-increment.md
       # - name: Print Version
       #   run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
       # - name: Cleanup created tag
@@ -63,10 +63,11 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           commit: "bump: release ${{ env.VERSION_NUMBER }}"
 
-      - name: Get version
+      - name: Setup release
         if: "startsWith(github.event.head_commit.message, 'bump:')"
         run: |
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
+          git show -s --format=%s | tail -n+1 > changelog-increment.md
       - name: Release
         if: "startsWith(github.event.head_commit.message, 'bump:')"
         uses: softprops/action-gh-release@v1
