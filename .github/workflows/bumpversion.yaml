@@ -42,7 +42,7 @@ jobs:
           echo "bump: release $(poetry run cz version --project)" > commit-message
           echo "" >> commit-message
           cat changelog-increment.md >> commit-message
-          git commit -af commit-message
+          git commit -aF commit-message
           rm changelog-increment.md commit-message
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
       # - name: Print Version
