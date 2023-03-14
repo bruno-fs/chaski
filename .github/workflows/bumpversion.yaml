@@ -40,7 +40,7 @@ jobs:
           git config user.email 'bump-version@dont.have.email'
           poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
-          git commit -am "bump: release ${{ env.VERSION_NUMBER}}\n\n$(cat changelog-increment.md)"
+          git commit -am 'bump: release ${{ env.VERSION_NUMBER}}\n\n$(cat changelog-increment.md)'
           rm changelog-increment.md
       # - name: Print Version
       #   run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
