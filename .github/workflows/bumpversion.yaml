@@ -7,7 +7,6 @@ on:
 
 jobs:
   bump_version:
-    if: "!startsWith(github.event.head_commit.message, 'bump:')"
     runs-on: ubuntu-latest
     name: "Bump version and create changelog with commitizen"
     steps:
@@ -16,37 +15,6 @@ jobs:
         with:
           fetch-depth: 0
           token: "${{ secrets.GITHUB_TOKEN }}"
-      - id: cz
-        name: Create bump and changelog
-        uses: commitizen-tools/commitizen-action@master
-        with:
-          # github_token: ${{ secrets.GITHUB_TOKEN }}
-          changelog_increment_filename: changelog-increment.md
-          push: false  # we can't push because our main branch is protected
-      - name: Print Version
-        run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
-      - name: Cleanup created tag
-        # commitzen ALWAYS creates a tag, but we don't want this behavior
-        # Ref https://github.com/commitizen-tools/commitizen/issues/612
-        run: |
-          chown -R $(whoami) .git
-          git tag -d ${{ steps.cz.outputs.version }}
-          git add changelog-increment.md
-          git commit --amend
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: "[auto] Bump Version + Changelog"
-          body: Update version and changelog
-          branch: bump-version
-          base: main
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-  release:
-    if: "startsWith(github.event.head_commit.message, 'bump:')"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
       - name: Install poetry
         run: pipx install poetry
       - name: Set up Python 3.9
@@ -58,10 +26,44 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --only=commit-lint --no-root
+      # - id: cz
+      #   name: Create bump and changelog
+      #   uses: commitizen-tools/commitizen-action@master
+      #   with:
+      #     # github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     changelog_increment_filename: changelog-increment.md
+      #     push: false  # we can't push because our main branch is protected
+      - name: Bump version
+        if: "!startsWith(github.event.head_commit.message, 'bump:')"
+        run: |
+          poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
+          git add changelog-increment.md
+          git commit -am "bump: release $(cz version --project)"
+      # - name: Print Version
+      #   run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
+      # - name: Cleanup created tag
+      #   # commitzen ALWAYS creates a tag, but we don't want this behavior
+      #   # Ref https://github.com/commitizen-tools/commitizen/issues/612
+      #   run: |
+      #     chown -R $(whoami) .git
+      #     git tag -d ${{ steps.cz.outputs.version }}
+      #     git add changelog-increment.md
+      #     git commit --amend
+      - name: Create Pull Request
+        if: "!startsWith(github.event.head_commit.message, 'bump:')"
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "[auto] Bump Version + Changelog"
+          body: Update version and changelog
+          branch: bump-version
+          base: main
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get version
+        if: "startsWith(github.event.head_commit.message, 'bump:')"
         run: |
           echo "VERSION_NUMBER=$(poetry run cz version -p)" >> $GITHUB_ENV
       - name: Release
+        if: "startsWith(github.event.head_commit.message, 'bump:')"
         uses: softprops/action-gh-release@v1
         with:
           body_path: "changelog-increment.md"
