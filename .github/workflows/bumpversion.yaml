@@ -36,12 +36,15 @@ jobs:
       - name: Bump version
         if: "!startsWith(github.event.head_commit.message, 'bump:')"
         run: |
+          poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
           git config user.name 'bump-version[bot]'
           git config user.email 'bump-version@dont.have.email'
-          poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
+          echo "bump: release $(poetry run cz version --project)" > commit-message
+          echo "" >> commit-message
+          cat changelog-increment.md >> commit-message
+          git commit -af commit-message
+          rm changelog-increment.md commit-message
           echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
-          git commit -am 'bump: release ${VERSION_NUMBER}\n\n$(cat changelog-increment.md)'
-          rm changelog-increment.md
       # - name: Print Version
       #   run: echo "Bumped to version ${{ steps.cz.outputs.version }}"
       # - name: Cleanup created tag
