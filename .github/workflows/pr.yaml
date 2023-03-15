@@ -8,6 +8,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install poetry
         run: pipx install poetry
@@ -28,4 +30,4 @@ jobs:
 
       - name: Lint commits
         run: |
-          poetry run cz check --rev-range ${GITHUB_BASE_REF}..HEAD
+          poetry run cz check --rev-range ${GITHUB_BASE_REF}..
