@@ -9,12 +9,14 @@ jobs:
   bump_version:
     runs-on: ubuntu-latest
     name: "Bump version and create changelog with commitizen"
+    env:
+      GIT_USER_NAME: github-actions
+      GIT_USER_EMAIL: github-actions@github.com
     steps:
       - name: Check out code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install poetry
         run: pipx install poetry
@@ -34,24 +36,23 @@ jobs:
         if: "!startsWith(github.event.head_commit.message, 'bump:')"
         run: |
           poetry run cz bump --files-only --yes --changelog --changelog-to-stdout > changelog-increment.md
-          git config user.name 'bump-version[bot]'
-          git config user.email 'bump-version@dont.have.email'
+          git config user.name ${GIT_USER_NAME}
+          git config user.email ${GIT_USER_EMAIL}
           echo "bump: release $(poetry run cz version --project)" > commit-message
           echo "" >> commit-message
           cat changelog-increment.md >> commit-message
           git commit -aF commit-message
           rm changelog-increment.md commit-message
-          echo "VERSION_NUMBER=$(poetry run cz version --project)" >> $GITHUB_ENV
 
       - name: Create Pull Request
         if: "!startsWith(github.event.head_commit.message, 'bump:')"
         uses: peter-evans/create-pull-request@v4
         with:
-          title: "[auto] Bump Version + Changelog"
+          author: "${{ env.GIT_USER_NAME }} <${{ env.GIT_USER_EMAIL }}>"
+          base: main
           body: Update version and changelog
           branch: bump-version
-          base: main
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: "[auto] Bump Version + Changelog"
 
       - name: Setup release
         if: "startsWith(github.event.head_commit.message, 'bump:')"
