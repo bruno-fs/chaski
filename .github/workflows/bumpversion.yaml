@@ -12,6 +12,7 @@ jobs:
     env:
       GIT_USER_NAME: quipucords-bot
       GIT_USER_EMAIL: quipucords@redhat.com
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -31,6 +32,13 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --only=commit-lint --no-root
+
+      - name: Should bump version?
+        if: "!startsWith(github.event.head_commit.message, 'bump:')"
+        run: |
+          # gracefully exit if there's no version to bump
+          poetry run cz bump --dry-run || \
+          gh run cancel ${{ github.run_id }}
 
       - name: Bump version
         if: "!startsWith(github.event.head_commit.message, 'bump:')"
