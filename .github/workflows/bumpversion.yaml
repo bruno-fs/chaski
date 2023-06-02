@@ -32,6 +32,17 @@ jobs:
         run: |
           poetry install --only=commit-lint --no-root
 
+      - name: Should bump version?
+        if: "!startsWith(github.event.head_commit.message, 'bump:')"
+        run: |
+          # gracefully exit if there's no version to bump 
+          # https://stackoverflow.com/a/75809743
+          poetry run cz bump --dry-run --files-only 2> /dev/null || \
+          gh run cancel ${{ github.run_id }} && \
+          gh run watch ${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Bump version
         if: "!startsWith(github.event.head_commit.message, 'bump:')"
         run: |
